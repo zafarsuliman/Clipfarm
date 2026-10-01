@@ -9,6 +9,7 @@ from rich.table import Table
 from clipfarm.core.io import read_json
 from clipfarm.analysis.multimodal import analyze_multimodal, write_signals
 from clipfarm.core.models import ClipCandidate, Transcript
+from clipfarm.intelligence import rank_candidates
 from clipfarm.editing.renderer import CAPTION_STYLES, TARGETS, render_candidates
 from clipfarm.pipeline import run_pipeline
 

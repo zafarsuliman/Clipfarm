@@ -5,6 +5,7 @@ from pathlib import Path
 
 from clipfarm.analysis.candidates import build_candidates
 from clipfarm.analysis.multimodal import analyze_multimodal, enrich_candidates, write_signals
+from clipfarm.intelligence import rank_candidates
 from clipfarm.core.io import write_json
 from clipfarm.core.models import RunManifest
 from clipfarm.editing.render_plan import build_render_plans
@@ -48,6 +49,7 @@ def run_pipeline(
         max_clips=clips,
     )
     candidates = enrich_candidates(candidates, signals)
+    candidates = rank_candidates(candidates, signals)
     candidates_path = write_json(run_dir / "candidates.json", candidates)
     plans = build_render_plans(candidates)
     render_plan_path = write_json(run_dir / "render_plan.json", plans)

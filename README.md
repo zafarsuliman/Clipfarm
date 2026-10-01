@@ -92,3 +92,21 @@ pip install -e ".[analysis,render]"
 ```
 
 The v0.3 fusion weights are intentionally provisional. v0.4 will replace them with the research-driven retention/virality model rather than treating them as final rules.
+
+## v0.4 — Viral / Retention Intelligence
+
+v0.4 adds Clipfarm's first research-informed ranking layer on top of v0.3 multimodal signals.
+Each candidate is now scored across five top-level dimensions:
+
+- Attention acquisition
+- Attention maintenance
+- Reward
+- Transmission
+- Audience match (neutral prior until account/platform context exists)
+
+The current feature layer also records hook quality, curiosity tension, payoff, novelty,
+emotional change, narrative progress, utility, share motive, attention-event density and
+attention debt. These are hypotheses/operational features, not claims of causal virality.
+
+Each candidate stores an `attention_events` timeline and a structured `viral` score object.
+This means later analytics can test whether the features actually predict retention and sharing.

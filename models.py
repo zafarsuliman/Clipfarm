@@ -3,6 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Literal
 
+from clipfarm.research.events import AttentionEvent
+
 from pydantic import BaseModel, Field
 
 
@@ -51,6 +53,25 @@ class MultimodalSignals(BaseModel):
     face_presence: list[SignalPoint] = Field(default_factory=list)
 
 
+class ViralScore(BaseModel):
+    attention_acquisition: float
+    attention_maintenance: float
+    reward: float
+    transmission: float
+    audience_match: float
+    hook_quality: float
+    curiosity_tension: float
+    payoff: float
+    novelty: float
+    emotion_change: float
+    narrative_progress: float
+    utility: float
+    share_motive: float
+    attention_event_density: float
+    attention_debt: float
+    final: float
+
+
 class ClipCandidate(BaseModel):
     start: float
     end: float
@@ -61,6 +82,8 @@ class ClipCandidate(BaseModel):
     transcript: str
     multimodal_score: float = 0.0
     signal_summary: dict[str, float] = Field(default_factory=dict)
+    viral: ViralScore | None = None
+    attention_events: list[AttentionEvent] = Field(default_factory=list)
 
 
 class SourceMetadata(BaseModel):
