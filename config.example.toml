@@ -1,0 +1,15 @@
+[transcription]
+model = "small"
+device = "cpu"
+compute_type = "int8"
+
+[candidates]
+min_duration = 18.0
+max_duration = 45.0
+max_clips = 8
+
+[render]
+aspect_ratio = "9:16"
+width = 1080
+height = 1920
+captions = true
