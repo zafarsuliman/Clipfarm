@@ -51,7 +51,8 @@ def run_pipeline(
     candidates = enrich_candidates(candidates, signals)
     candidates = rank_candidates(candidates, signals)
     candidates_path = write_json(run_dir / "candidates.json", candidates)
-    plans = build_render_plans(candidates)
+
+    plans = build_render_plans(candidates, transcript)
     render_plan_path = write_json(run_dir / "render_plan.json", plans)
 
     manifest = RunManifest(

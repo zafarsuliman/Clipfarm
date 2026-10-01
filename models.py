@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
-
-from clipfarm.research.events import AttentionEvent
+from typing import Literal, Any
 
 from pydantic import BaseModel, Field
 
@@ -40,19 +38,6 @@ class ScoreBreakdown(BaseModel):
     arc: float
 
 
-class SignalPoint(BaseModel):
-    t: float
-    value: float
-
-
-class MultimodalSignals(BaseModel):
-    duration: float
-    audio_rms: list[SignalPoint] = Field(default_factory=list)
-    scene_changes: list[SignalPoint] = Field(default_factory=list)
-    motion: list[SignalPoint] = Field(default_factory=list)
-    face_presence: list[SignalPoint] = Field(default_factory=list)
-
-
 class ViralScore(BaseModel):
     attention_acquisition: float
     attention_maintenance: float
@@ -72,6 +57,19 @@ class ViralScore(BaseModel):
     final: float
 
 
+class SignalPoint(BaseModel):
+    t: float
+    value: float
+
+
+class MultimodalSignals(BaseModel):
+    duration: float
+    audio_rms: list[SignalPoint] = Field(default_factory=list)
+    scene_changes: list[SignalPoint] = Field(default_factory=list)
+    motion: list[SignalPoint] = Field(default_factory=list)
+    face_presence: list[SignalPoint] = Field(default_factory=list)
+
+
 class ClipCandidate(BaseModel):
     start: float
     end: float
@@ -80,10 +78,10 @@ class ClipCandidate(BaseModel):
     reasons: list[str] = Field(default_factory=list)
     scores: ScoreBreakdown
     transcript: str
-    multimodal_score: float = 0.0
+    multimodal_score: float | None = None
     signal_summary: dict[str, float] = Field(default_factory=dict)
     viral: ViralScore | None = None
-    attention_events: list[AttentionEvent] = Field(default_factory=list)
+    attention_events: list[Any] = Field(default_factory=list)
 
 
 class SourceMetadata(BaseModel):
@@ -104,6 +102,9 @@ class RenderPlan(BaseModel):
     target_height: int = 1920
     caption_style: str = "default"
     tracking_mode: str = "face_fallback"
+    edit_profile: str = "default"
+    variant: str = "balanced"
+    edit_plan: dict[str, Any] = Field(default_factory=dict)
 
 
 class RunManifest(BaseModel):
