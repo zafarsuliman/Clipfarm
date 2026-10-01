@@ -7,10 +7,45 @@ from rich.console import Console
 from rich.table import Table
 
 from clipfarm.core.io import read_json
+from clipfarm.core.models import ClipCandidate, Transcript
+from clipfarm.editing.renderer import CAPTION_STYLES, TARGETS, render_candidates
 from clipfarm.pipeline import run_pipeline
 
 app = typer.Typer(no_args_is_help=True)
 console = Console()
+
+
+def _print_candidates(candidates: list[dict]) -> None:
+    table = Table(title="Clipfarm candidates")
+    table.add_column("#", justify="right")
+    table.add_column("Start")
+    table.add_column("End")
+    table.add_column("Score")
+    table.add_column("Hook")
+    table.add_column("Reasons")
+    for idx, item in enumerate(candidates, 1):
+        table.add_row(
+            str(idx),
+            f"{item['start']:.2f}",
+            f"{item['end']:.2f}",
+            f"{item['overall']:.2f}/10",
+            item["hook"],
+            ", ".join(item.get("reasons") or []),
+        )
+    console.print(table)
+
+
+def _parse_indexes(spec: str | None) -> set[int] | None:
+    if not spec:
+        return None
+    indexes: set[int] = set()
+    for token in spec.replace(" ", "").split(","):
+        if not token:
+            continue
+        if not token.isdigit() or int(token) < 1:
+            raise typer.BadParameter("Use comma-separated positive indexes, e.g. 1,3,5")
+        indexes.add(int(token))
+    return indexes or None
 
 
 @app.command()
@@ -37,24 +72,58 @@ def run(
         clips=clips,
     )
     candidates = read_json(Path(manifest.candidates_path))
-    table = Table(title="Clipfarm candidates")
-    table.add_column("#", justify="right")
-    table.add_column("Start")
-    table.add_column("End")
-    table.add_column("Score")
-    table.add_column("Hook")
-    table.add_column("Reasons")
-    for idx, item in enumerate(candidates, 1):
-        table.add_row(
-            str(idx),
-            f"{item['start']:.2f}",
-            f"{item['end']:.2f}",
-            f"{item['overall']:.2f}/10",
-            item["hook"],
-            ", ".join(item.get("reasons") or []),
-        )
-    console.print(table)
+    _print_candidates(candidates)
     console.print(f"Run manifest: [bold]{manifest.path}[/bold]")
+    console.print(
+        "Next: render previews with "
+        f"[bold]clipfarm render {manifest.path} --preview[/bold]"
+    )
+
+
+@app.command()
+def render(
+    manifest: Path = typer.Argument(..., exists=True, help="Path to a run manifest.json"),
+    out: Path | None = typer.Option(None, "--out", help="Output directory; defaults to <run>/clips"),
+    aspect: str = typer.Option("9:16", "--aspect", help="9:16, 1:1, or 16:9"),
+    style: str = typer.Option("default", "--style", help="Caption style"),
+    preview: bool = typer.Option(False, "--preview", help="Render smaller, faster review copies"),
+    clips: str | None = typer.Option(None, "--clips", help="Candidate indexes, e.g. 1,3,5"),
+    loudnorm: bool = typer.Option(True, "--loudnorm/--no-loudnorm"),
+) -> None:
+    if aspect not in TARGETS:
+        raise typer.BadParameter(f"Unknown aspect. Choose: {', '.join(TARGETS)}")
+    if style not in CAPTION_STYLES:
+        raise typer.BadParameter(f"Unknown style. Choose: {', '.join(CAPTION_STYLES)}")
+
+    raw_manifest = read_json(manifest)
+    source_path = Path(raw_manifest["source"]["local_path"])
+    transcript_path = Path(raw_manifest["transcript_path"])
+    candidates_path = Path(raw_manifest["candidates_path"])
+    run_dir = Path(raw_manifest["run_dir"])
+    output_dir = out or (run_dir / ("previews" if preview else "clips"))
+
+    transcript = Transcript.model_validate(read_json(transcript_path))
+    candidates = [ClipCandidate.model_validate(item) for item in read_json(candidates_path)]
+    indexes = _parse_indexes(clips)
+    if indexes:
+        bad = sorted(i for i in indexes if i > len(candidates))
+        if bad:
+            raise typer.BadParameter(f"Candidate index out of range: {bad}; max is {len(candidates)}")
+
+    rendered = render_candidates(
+        source=source_path,
+        transcript=transcript,
+        candidates=candidates,
+        output_dir=output_dir,
+        aspect=aspect,
+        caption_style=style,
+        preview=preview,
+        loudnorm=loudnorm,
+        indexes=indexes,
+    )
+    console.print(f"Rendered [bold]{len(rendered)}[/bold] clip(s) to [bold]{output_dir}[/bold]")
+    for path in rendered:
+        console.print(f"  • {path}")
 
 
 if __name__ == "__main__":

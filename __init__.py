@@ -1,1 +1,3 @@
-__version__ = "0.1.0"
+from clipfarm.editing.renderer import render_candidate, render_candidates
+
+__all__ = ["render_candidate", "render_candidates"]

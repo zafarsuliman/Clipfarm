@@ -51,3 +51,19 @@ For a Ryzen 7 5700U / integrated GPU laptop, start with `--model small --device 
 ## License and upstream code
 
 Clipfarm itself is MIT licensed. Some implementation ideas and permissively licensed code patterns are adapted from upstream projects; see `THIRD_PARTY_NOTICES.md`.
+
+## Second pass: rendering
+
+After `clipfarm run`, render fast review copies:
+
+```bash
+clipfarm render runs/<run-id>/manifest.json --preview
+```
+
+Render selected full-resolution vertical clips:
+
+```bash
+clipfarm render runs/<run-id>/manifest.json --clips 1,3,5 --aspect 9:16 --style default
+```
+
+Rendering now includes dynamic face-tracked 9:16 reframing where needed, center-crop fallback, word-highlight ASS captions, H.264/AAC output, loudness normalization, and per-clip metadata. Install the render extra with `pip install -e .[render]` and make sure FFmpeg/ffprobe are on PATH.
