@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from clipfarm.core.io import read_json
+from clipfarm.analysis.multimodal import analyze_multimodal, write_signals
 from clipfarm.core.models import ClipCandidate, Transcript
 from clipfarm.editing.renderer import CAPTION_STYLES, TARGETS, render_candidates
 from clipfarm.pipeline import run_pipeline
@@ -77,6 +78,21 @@ def run(
     console.print(
         "Next: render previews with "
         f"[bold]clipfarm render {manifest.path} --preview[/bold]"
+    )
+
+
+@app.command()
+def analyze(
+    video: Path = typer.Argument(..., exists=True, help="Local video file to analyze"),
+    out: Path = typer.Option(Path("signals.json"), "--out"),
+) -> None:
+    """Extract CPU-friendly audio/visual signals without clipping or rendering."""
+    signals = analyze_multimodal(video)
+    write_signals(signals, out)
+    console.print(f"Signals written to [bold]{out}[/bold]")
+    console.print(
+        f"audio={len(signals.audio_rms)} scene_changes={len(signals.scene_changes)} "
+        f"motion={len(signals.motion)} faces={len(signals.face_presence)}"
     )
 
 

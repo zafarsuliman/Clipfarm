@@ -38,6 +38,19 @@ class ScoreBreakdown(BaseModel):
     arc: float
 
 
+class SignalPoint(BaseModel):
+    t: float
+    value: float
+
+
+class MultimodalSignals(BaseModel):
+    duration: float
+    audio_rms: list[SignalPoint] = Field(default_factory=list)
+    scene_changes: list[SignalPoint] = Field(default_factory=list)
+    motion: list[SignalPoint] = Field(default_factory=list)
+    face_presence: list[SignalPoint] = Field(default_factory=list)
+
+
 class ClipCandidate(BaseModel):
     start: float
     end: float
@@ -46,6 +59,8 @@ class ClipCandidate(BaseModel):
     reasons: list[str] = Field(default_factory=list)
     scores: ScoreBreakdown
     transcript: str
+    multimodal_score: float = 0.0
+    signal_summary: dict[str, float] = Field(default_factory=dict)
 
 
 class SourceMetadata(BaseModel):
@@ -75,6 +90,7 @@ class RunManifest(BaseModel):
     transcript_path: str
     candidates_path: str
     render_plan_path: str
+    signals_path: str | None = None
 
     @property
     def path(self) -> Path:

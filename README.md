@@ -67,3 +67,28 @@ clipfarm render runs/<run-id>/manifest.json --clips 1,3,5 --aspect 9:16 --style 
 ```
 
 Rendering now includes dynamic face-tracked 9:16 reframing where needed, center-crop fallback, word-highlight ASS captions, H.264/AAC output, loudness normalization, and per-clip metadata. Install the render extra with `pip install -e .[render]` and make sure FFmpeg/ffprobe are on PATH.
+
+## v0.3 multimodal intelligence
+
+The pipeline now extracts CPU-friendly signals before ranking candidates:
+
+- FFmpeg RMS audio energy
+- FFmpeg scene-change scores
+- low-resolution OpenCV motion energy
+- low-resolution face-presence signal
+- per-candidate signal summaries
+- provisional multimodal fusion with transcript scores
+
+Run only signal extraction with:
+
+```bash
+clipfarm analyze path/to/video.mp4 --out signals.json
+```
+
+On a CPU-only machine, install the analysis dependency with:
+
+```bash
+pip install -e ".[analysis,render]"
+```
+
+The v0.3 fusion weights are intentionally provisional. v0.4 will replace them with the research-driven retention/virality model rather than treating them as final rules.
